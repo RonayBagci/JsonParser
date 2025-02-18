@@ -7,6 +7,8 @@ public class Main {
         LexicalAnalyzer lexicalAnallyzer = new LexicalAnalyzer();
         lexicalAnallyzer.readJson("test.json");
 
+        System.out.println("The tokens are listed below:");
+
         lexicalAnallyzer.getTokenList().forEach(token -> System.out.println(token));
 
         System.out.println("**************************");
@@ -15,10 +17,8 @@ public class Main {
 
         Map<String, Object> json = (Map<String, Object>) jsonParser.parse();
 
-        // "address" değerini al
         Map<String, Object> address = (Map<String, Object>) json.get("address");
 
-        // "address" içindeki "city" değerini al
         String city = (String) address.get("city");
 
         System.out.println("The json object is : " + json);
