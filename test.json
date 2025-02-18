@@ -1,0 +1,11 @@
+{
+    "name": "Ali",
+    "age": 25,
+    "isStudent": false,
+    "grades": [75.4, 90, 85],
+    "address": {
+        "city": "İstanbul",
+        "country": "Turkey",
+        "street":null 
+    }
+}
