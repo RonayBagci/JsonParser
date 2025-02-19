@@ -47,25 +47,19 @@ public class LexicalAnalyzer {
     }
 
     public void classifyTokens(String data) {
-        
         Pattern tokenPattern = Pattern.compile(
-            "\"|" + 
-            "[^\"\\s,\\{\\}\\[\\]:]+|" + 
-            "-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|" + 
-            "\\{|\\}|\\[|\\]|:|,|" + 
-            "\\b(true|false|null)\\b" 
+            "\"(\\\\.|[^\"])*\"|" +       // String değerler: çift tırnak içindeki tüm karakterler
+            "\\{|\\}|\\[|\\]|:|,|" +       // Semboller
+            "-?\\d+(\\.\\d+)?|" +          // Sayılar
+            "\\btrue\\b|\\bfalse\\b|null"  // Boolean ve null
         );
-    
+
         Matcher matcher = tokenPattern.matcher(data);
-        boolean insideString = false;
-    
+
         while (matcher.find()) {
             String token = matcher.group().trim();
-    
-            if (token.equals("\"")) {
-                tokenList.add("SYMBOL: DOUBLE QUOTE");
-                insideString = !insideString;
-            } else if (insideString) {
+
+            if (token.startsWith("\"") && token.endsWith("\"")) {
                 tokenList.add("STRING VALUE: " + token);
             } else if (defineSymbolTokens().containsKey(token)) {
                 tokenList.add("SYMBOL: " + defineSymbolTokens().get(token));

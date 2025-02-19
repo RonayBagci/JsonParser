@@ -15,7 +15,7 @@ public class JsonParser {
             throw new IllegalArgumentException("Token list is null or empty");
         }
 
-        String token = tokens.get(currentIndex);
+        String token = peekToken();
         if (token.equals("SYMBOL: LEFT BRACE")) {
             return parseObject();
         } else if (token.equals("SYMBOL: LEFT BRACKET")) {
@@ -27,79 +27,88 @@ public class JsonParser {
 
     private Map<String, Object> parseObject() {
         Map<String, Object> jsonObject = new HashMap<>();
-        currentIndex++; 
-    
+        consumeToken("SYMBOL: LEFT BRACE"); // Skip '{'
+
         while (currentIndex < tokens.size()) {
-            String token = tokens.get(currentIndex);
-    
+            String token = peekToken();
+
+            // Eğer boş token veya satır sonu gibi bir şey varsa atla
+            if (token.trim().isEmpty()) {
+                currentIndex++;
+                continue;
+            }
+
             if (token.equals("SYMBOL: RIGHT BRACE")) {
-                currentIndex++; 
+                consumeToken("SYMBOL: RIGHT BRACE"); // Skip '}'
                 return jsonObject;
             }
-    
-            
+
+            // Anahtar okuma (opsiyonel DOUBLE QUOTE tokenını atla)
             if (token.equals("SYMBOL: DOUBLE QUOTE")) {
-                currentIndex++; 
-                token = tokens.get(currentIndex); 
+                nextToken();
+                token = peekToken();
             }
-    
-            
+
             if (!token.startsWith("STRING VALUE: ")) {
-                throw new RuntimeException("Invalid JSON: Expected key");
+                throw new RuntimeException("Invalid JSON: Expected key but found: " + token);
             }
             String key = token.substring("STRING VALUE: ".length());
-            currentIndex++;
-    
-           
-            if (tokens.get(currentIndex).equals("SYMBOL: DOUBLE QUOTE")) {
-                currentIndex++; 
+            // Eğer key çift tırnak içindeyse kaldır
+            if (key.startsWith("\"") && key.endsWith("\"")) {
+                key = key.substring(1, key.length() - 1);
             }
-    
-            
-            if (!tokens.get(currentIndex).equals("SYMBOL: COLON")) {
-                throw new RuntimeException("Invalid JSON: Expected ':'");
+            nextToken(); // Anahtar okundu
+
+            // Opsiyonel DOUBLE QUOTE tokenını atla (kapama tırnağı)
+            token = peekToken();
+            if (token.equals("SYMBOL: DOUBLE QUOTE")) {
+                nextToken();
             }
-            currentIndex++;
-    
-           
+
+            token = peekToken();
+            if (!token.equals("SYMBOL: COLON")) {
+                throw new RuntimeException("Invalid JSON: Expected ':' but found: " + token);
+            }
+            consumeToken("SYMBOL: COLON"); // Skip ':'
+
             Object value = parseValue();
             jsonObject.put(key, value);
-    
-            
-            token = tokens.get(currentIndex);
+
+            // Sonrasında ',' veya '}' bekle
+            if (currentIndex >= tokens.size()) break;
+            token = peekToken();
             if (token.equals("SYMBOL: COMMA")) {
-                currentIndex++;
-            } else if (!token.equals("SYMBOL: RIGHT BRACE")) {
-                throw new RuntimeException("Invalid JSON: Expected ',' or '}'");
+                consumeToken("SYMBOL: COMMA");
+            } else if (token.equals("SYMBOL: RIGHT BRACE")) {
+                continue;
+            } else {
+                throw new RuntimeException("Invalid JSON: Expected ',' or '}' but found: " + token);
             }
         }
-    
         throw new RuntimeException("Invalid JSON: Unclosed object");
     }
-    
 
     private List<Object> parseArray() {
         List<Object> jsonArray = new ArrayList<>();
-        currentIndex++; // Skip '['
+        consumeToken("SYMBOL: LEFT BRACKET"); // Skip '['
 
         while (currentIndex < tokens.size()) {
-            String token = tokens.get(currentIndex);
+            String token = peekToken();
 
             if (token.equals("SYMBOL: RIGHT BRACKET")) {
-                currentIndex++;
+                consumeToken("SYMBOL: RIGHT BRACKET"); // Skip ']'
                 return jsonArray;
             }
 
-            
             Object value = parseValue();
             jsonArray.add(value);
 
-            
-            token = tokens.get(currentIndex);
+            if (currentIndex >= tokens.size()) break;
+            token = peekToken();
             if (token.equals("SYMBOL: COMMA")) {
-                currentIndex++;
+                consumeToken("SYMBOL: COMMA");
             } else if (!token.equals("SYMBOL: RIGHT BRACKET")) {
-                throw new RuntimeException("Invalid JSON: Expected ',' or ']'");
+                throw new RuntimeException("Invalid JSON: Expected ',' or ']' but found: " + token);
             }
         }
 
@@ -110,35 +119,36 @@ public class JsonParser {
         if (currentIndex >= tokens.size()) {
             throw new RuntimeException("Unexpected end of JSON input");
         }
-        String token = tokens.get(currentIndex);
-    
-        
+        String token = peekToken();
+
+        // Eğer değer çift tırnak ile başlıyorsa, opsiyonel tırnak tokenlarını atlayıp değeri oku
         if (token.equals("SYMBOL: DOUBLE QUOTE")) {
-            currentIndex++; 
-            token = tokens.get(currentIndex); 
+            nextToken();
+            token = peekToken();
         }
-    
+
         if (token.startsWith("STRING VALUE: ")) {
-            currentIndex++;
+            nextToken();
             String value = token.substring("STRING VALUE: ".length());
-            
-            
-            if (tokens.get(currentIndex).equals("SYMBOL: DOUBLE QUOTE")) {
-                currentIndex++;
+            // Eğer tırnaklar varsa kaldır
+            if (value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length() - 1);
             }
-            
+            if (currentIndex < tokens.size() && peekToken().equals("SYMBOL: DOUBLE QUOTE")) {
+                nextToken();
+            }
             return value;
         } else if (token.startsWith("NUMBER: ")) {
-            currentIndex++;
+            nextToken();
             return Double.parseDouble(token.substring("NUMBER: ".length()));
         } else if (token.equals("BOOLEAN: TRUE")) {
-            currentIndex++;
+            nextToken();
             return true;
         } else if (token.equals("BOOLEAN: FALSE")) {
-            currentIndex++;
+            nextToken();
             return false;
         } else if (token.equals("UNKNOWN: null")) {
-            currentIndex++;
+            nextToken();
             return null;
         } else if (token.equals("SYMBOL: LEFT BRACE")) {
             return parseObject();
@@ -148,5 +158,20 @@ public class JsonParser {
             throw new RuntimeException("Invalid JSON: Unexpected token: " + token);
         }
     }
-    
+
+    // Yardımcı metotlar: peekToken ve consumeToken, nextToken.
+    private String peekToken() {
+        return tokens.get(currentIndex).trim();
+    }
+
+    private String nextToken() {
+        return tokens.get(currentIndex++);
+    }
+
+    private void consumeToken(String expected) {
+        String token = nextToken();
+        if (!token.equals(expected)) {
+            throw new RuntimeException("Invalid JSON: Expected token " + expected + " but found " + token);
+        }
+    }
 }

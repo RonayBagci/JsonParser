@@ -1,11 +1,73 @@
 {
-    "name": "Ali",
-    "age": 25,
-    "isStudent": false,
-    "grades": [75.4, 90, 85],
-    "address": {
-        "city": "İstanbul",
-        "country": "Turkey",
-        "street":null 
-    }
-}
+    "users": [
+      {
+        "id": 1,
+        "name": "John Doe",
+        "email": "johndoe@example.com",
+        "address": {
+          "street": "123 Main St",
+          "city": "Springfield",
+          "state": "IL",
+          "zipcode": "62701"
+        },
+        "phone_numbers": [
+          {
+            "type": "home",
+            "number": "555-1234"
+          },
+          {
+            "type": "work",
+            "number": "555-5678"
+          }
+        ],
+        "is_active": true,
+        "roles": ["admin", "user"]
+      },
+      {
+        "id": 2,
+        "name": "Jane Smith",
+        "email": "janesmith@example.com",
+        "address": {
+          "street": "456 Elm St",
+          "city": "Centerville",
+          "state": "OH",
+          "zipcode": "45459"
+        },
+        "phone_numbers": [
+          {
+            "type": "home",
+            "number": "555-8765"
+          },
+          {
+            "type": "work",
+            "number": "555-4321"
+          }
+        ],
+        "is_active": false,
+        "roles": ["user"]
+      },
+      {
+        "id": 3,
+        "name": "Bob Johnson",
+        "email": "bobjohnson@example.com",
+        "address": {
+          "street": "789 Oak St",
+          "city": "Madison",
+          "state": "WI",
+          "zipcode": "53703"
+        },
+        "phone_numbers": [
+          {
+            "type": "home",
+            "number": "555-1122"
+          },
+          {
+            "type": "work",
+            "number": "555-3344"
+          }
+        ],
+        "is_active": true,
+        "roles": ["user"]
+      }
+    ]
+  }

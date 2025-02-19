@@ -1,3 +1,4 @@
+import java.util.List;
 import java.util.Map;
 
 public class Main {
@@ -17,11 +18,18 @@ public class Main {
 
         Map<String, Object> json = (Map<String, Object>) jsonParser.parse();
 
-        Map<String, Object> address = (Map<String, Object>) json.get("address");
-
-        String city = (String) address.get("city");
+        List<Object> users = (List<Object>) json.get("users");
+        
 
         System.out.println("The json object is : " + json);
-        System.out.println("City: " + city);
+        System.out.println("***************");
+        
+        for(Object userObject:users){
+            Map<String,Object> user = (Map<String,Object>) userObject;
+            System.out.println("User id :" + user.get("id"));
+        }
+
+
+
     }
 }
